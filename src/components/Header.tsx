@@ -12,8 +12,8 @@ const Header: React.FC<HeaderProps> = ({ language, onLanguageChange }) => {
       <div className="flex justify-between items-center max-w-7xl mx-auto">
         <div className="flex items-center space-x-4">
           <img 
-            src="https://upload.wikimedia.org/wikipedia/en/e/eb/National_Testing_Agency_logo.png" 
-            alt="NTA Logo"
+            src="https://cmsredesign.channeli.in/library/assets/images/IITR_Logo.svg" 
+            alt="IITR Logo"
             className="h-12"
           />
           <div className="border-l border-gray-300 h-12"></div>

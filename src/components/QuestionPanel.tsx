@@ -1,24 +1,39 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CheckCircle, Circle, HelpCircle, ChevronLeft, ChevronRight, ArrowUp, ArrowDown } from 'lucide-react';
 
 interface QuestionPanelProps {
   questionId: number;
-  answer: string;
+  answer: string | null;
+  unsavedAnswer: string | null;
   isMarkedForReview: boolean;
   onAnswer: (questionId: number, answer: string) => void;
   onMarkForReview: (questionId: number) => void;
   onSaveAndNext: (questionId: number, answer: string | null) => void;
+  onQuestionSelect: (questionId: number) => void;
 }
 
 const QuestionPanel: React.FC<QuestionPanelProps> = ({
   questionId,
   answer,
+  unsavedAnswer,
   isMarkedForReview,
   onAnswer,
   onMarkForReview,
   onSaveAndNext,
+  onQuestionSelect,
 }) => {
-  const [selectedAnswer, setSelectedAnswer] = useState<string>(answer || '');
+  // Use the unsaved answer if available, otherwise use the saved answer
+  const [selectedAnswer, setSelectedAnswer] = useState<string>('');
+
+  // Update selectedAnswer when props change
+  useEffect(() => {
+    // If there's no answer (cleared) but question is visited, keep selection empty
+    if (!answer && !unsavedAnswer) {
+      setSelectedAnswer('');
+    } else {
+      setSelectedAnswer(unsavedAnswer || answer || '');
+    }
+  }, [unsavedAnswer, answer]);
 
   // Sample question data - in a real app, this would come from an API
   const question = {
@@ -41,12 +56,25 @@ const QuestionPanel: React.FC<QuestionPanelProps> = ({
   };
 
   const handleClearResponse = () => {
-    setSelectedAnswer('');
-    onAnswer(questionId, '');
+    setSelectedAnswer(''); // Clear the radio button selection
+    onAnswer(questionId, ''); // Clear any unsaved answer
+    onSaveAndNext(questionId, null); // Remove the answer from parent state
+  };
+
+  const handlePrevious = () => {
+    if (questionId > 1) {
+      onQuestionSelect(questionId - 1);
+    }
+  };
+
+  const handleNext = () => {
+    if (questionId < 75) {
+      onQuestionSelect(questionId + 1);
+    }
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md">
+    <div className="bg-white rounded-lg shadow-md max-h-[calc(100vh-200px)] overflow-y-auto">
       {/* Question Header */}
       <div className="border-b border-gray-200 p-4 flex justify-between items-center">
         <h2 className="text-lg font-semibold">Question {questionId}</h2>
@@ -118,12 +146,38 @@ const QuestionPanel: React.FC<QuestionPanelProps> = ({
           </button>
         </div>
 
-        <div className="flex space-x-3">
+        <div className="flex items-center space-x-3">
           <button 
-            onClick={handleSaveAndNext}
-            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 flex items-center space-x-2"
+            onClick={handlePrevious}
+            disabled={questionId === 1}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors
+              ${questionId === 1 
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
           >
-            <span>Save & Next</span>
+            <ChevronLeft className="w-5 h-5" />
+            Previous
+          </button>
+
+          <button
+            onClick={handleSaveAndNext}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg transition-colors
+              bg-blue-600 text-white hover:bg-blue-700"
+          >
+            Save & Next
+          </button>
+
+          <button
+            onClick={handleNext}
+            disabled={questionId === 75}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors
+              ${questionId === 75
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+          >
+            Next
             <ChevronRight className="w-5 h-5" />
           </button>
         </div>
@@ -147,23 +201,13 @@ const QuestionPanel: React.FC<QuestionPanelProps> = ({
               : 'Not Answered'}
           </span>
         </div>
-        <div className="flex space-x-3">
-          <button 
-            onClick={() => questionId > 1 && onSaveAndNext(questionId, selectedAnswer)}
-            className="flex items-center space-x-2 text-gray-600 hover:text-gray-800"
-          >
-            <ChevronLeft className="w-5 h-5" />
-            <span>Previous</span>
-          </button>
-          <button 
-            onClick={() => questionId < 75 && onSaveAndNext(questionId, selectedAnswer)}
-            className="flex items-center space-x-2 text-gray-600 hover:text-gray-800"
-          >
-            <span>Next</span>
-            <ChevronRight className="w-5 h-5" />
-          </button>
-        </div>
       </div>
+
+      {unsavedAnswer && (
+        <div className="px-4 py-2 bg-yellow-50 text-yellow-800 text-sm">
+          You have an unsaved answer. Click "Save & Next" to save your response.
+        </div>
+      )}
     </div>
   );
 };
