@@ -1,9 +1,7 @@
-import React, { useState } from "react";
-import TestInterface from "./components/TestInterface";
-import Dashboard from "./components/Dashboard";
-import Header from "./components/Header";
-import LoginPage from "./components/LoginPage";
-import Instructions from "./components/Instructions";
+import { useState } from "react";
+import Header from "./Header";
+import Dashboard from "./Dashboard";
+import TestInterface from "./TestInterface";
 
 interface TestResult {
   score: number;
@@ -17,13 +15,11 @@ interface TestResult {
   testDate: Date;
 }
 
-function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [showInstructions, setShowInstructions] = useState(false);
-  const [currentSection, setCurrentSection] = useState("physics");
+function QuetionWindow() {
   const [language, setLanguage] = useState("english");
-  const [isTestCompleted, setIsTestCompleted] = useState(false);
   const [lastTestResult, setLastTestResult] = useState<TestResult | null>(null);
+  const [currentSection, setCurrentSection] = useState("physics");
+  const [isTestCompleted, setIsTestCompleted] = useState(false);
 
   const handleTestComplete = (result: TestResult) => {
     setLastTestResult({
@@ -32,18 +28,6 @@ function App() {
     });
     setIsTestCompleted(true);
   };
-
-  // Render the login page
-  if (!isLoggedIn && !showInstructions) {
-    return <LoginPage onLogin={() => setShowInstructions(true)} />;
-  }
-
-  // Render the instructions page
-  if (!isLoggedIn && showInstructions) {
-    return <Instructions  />;
-  }
-
-  // Render the main application
   return (
     <div className="min-h-screen bg-gray-50">
       <Header language={language} onLanguageChange={setLanguage} />
@@ -60,4 +44,4 @@ function App() {
   );
 }
 
-export default App;
+export default QuetionWindow;
