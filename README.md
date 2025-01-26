@@ -15,7 +15,7 @@ To run the project, basic knowledge of TypeScript and React is required. The onl
 ### 1. Cloning the Repository
 
 ```bash
-git clone https://github.com/nishit-27/quizwebapp2-2a4cce0.git
+git clone https://github.com/nishit-27/quizwebapp2.git
 ```
 
 ### 2. Dependency Installation
