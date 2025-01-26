@@ -74,7 +74,7 @@ export default function LoginPage({ onLogin }: LoginProps) {
               required
             />
           </div>
-          {/* login button */}
+          {/* login button added*/}
           {error && <p className="text-sm text-red-500">{error}</p>}
           <button
             type="submit"
