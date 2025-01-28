@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Eye, EyeOff, Mail, Lock, User, Github } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { AuthService } from "../services/auth.service";
+import { toast } from "react-hot-toast";
 
 interface LoginProps {
   onLogin: (user: User) => void;
@@ -26,7 +28,9 @@ const LoginPage: React.FC<LoginProps> = ({
   isSignUp: initialIsSignUp = false,
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isSignUp, setIsSignUp] = useState(initialIsSignUp);
+  const [loginType, setLoginType] = useState<"student" | "admin">("student");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -65,28 +69,74 @@ const LoginPage: React.FC<LoginProps> = ({
 
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
       if (isSignUp) {
-        // Handle sign up
-        const newUser = {
-          id: Math.random().toString(),
-          name,
-          email,
-        };
-        onLogin(newUser);
+        try {
+          await AuthService.registerStudent({
+            fullName: name,
+            email,
+            password,
+          });
+
+          // Show success toast and redirect
+          toast.success("Account created successfully!", {
+            duration: 3000,
+            position: "top-center",
+          });
+
+          // Clear form
+          setEmail("");
+          setPassword("");
+          setName("");
+
+          // Redirect to login page
+          navigate("/login", { replace: true });
+        } catch (error) {
+          if (error instanceof Error) {
+            if (error.message.includes("Unable to connect")) {
+              toast.error("Server connection failed. Please try again later.");
+              setErrors((prev) => ({
+                ...prev,
+                email: "Server connection failed. Please try again later.",
+              }));
+            } else {
+              toast.error(error.message);
+              setErrors((prev) => ({
+                ...prev,
+                email: error.message,
+              }));
+            }
+          }
+        }
       } else {
-        // Handle sign in
-        const user = {
-          id: Math.random().toString(),
-          name: "John Doe", // This would come from your backend
-          email,
-        };
-        onLogin(user);
+        // Handle login
+        try {
+          if (loginType === "student") {
+            const user = await AuthService.loginStudent(email, password);
+            onLogin({
+              id: user.id,
+              fullName: user.fullName,
+              email: user.email,
+            });
+          } else {
+            const admin = await AuthService.loginAdmin(email, password);
+            onLogin({
+              id: admin.id,
+              fullName: admin.fullName,
+              email: admin.email,
+            });
+          }
+        } catch (error) {
+          setErrors((prev) => ({
+            ...prev,
+            email: "Invalid email or password",
+            password: "Invalid email or password",
+          }));
+          return;
+        }
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Authentication error:", error);
+      toast.error(error.message || "An error occurred");
     } finally {
       setIsLoading(false);
     }
@@ -216,6 +266,29 @@ const LoginPage: React.FC<LoginProps> = ({
                 <p className="mt-2 text-sm text-red-600">{errors.password}</p>
               )}
             </div>
+
+            {!isSignUp && (
+              <div className="flex items-center justify-center space-x-16">
+                <label className="inline-flex items-center">
+                  <input
+                    type="radio"
+                    className="form-radio text-blue-600 h-4 w-4"
+                    checked={loginType === "student"}
+                    onChange={() => setLoginType("student")}
+                  />
+                  <span className="ml-2 text-gray-700">Student</span>
+                </label>
+                <label className="inline-flex items-center">
+                  <input
+                    type="radio"
+                    className="form-radio text-blue-600 h-4 w-4"
+                    checked={loginType === "admin"}
+                    onChange={() => setLoginType("admin")}
+                  />
+                  <span className="ml-2 text-gray-700">Admin</span>
+                </label>
+              </div>
+            )}
 
             <div className="flex items-center justify-between">
               <div className="flex items-center">

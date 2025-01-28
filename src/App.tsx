@@ -11,6 +11,7 @@ import TestAnalysis from "./components/TestAnalysis";
 import Header from "./components/Header";
 import LoginPage from "./components/LoginPage";
 import Instructions from "./components/Instructions";
+import { Toaster } from "react-hot-toast";
 
 interface TestResult {
   score: number;
@@ -28,7 +29,7 @@ interface TestResult {
 
 interface User {
   id: string;
-  name: string;
+  fullName: string;
   email: string;
 }
 
@@ -98,72 +99,76 @@ function App() {
   };
 
   return (
-    <Router>
-      <div className="min-h-screen bg-gray-50">
-        {isLoggedIn && (
-          <Header
-            language={language}
-            onLanguageChange={setLanguage}
-            userName={user?.name}
-            onLogout={handleLogout}
-          />
-        )}
-        <Routes>
-          <Route
-            path="/login"
-            element={
-              !isLoggedIn ? (
-                <LoginPage onLogin={handleLogin} isSignUp={false} />
-              ) : (
-                <Navigate to="/" replace />
-              )
-            }
-          />
-          <Route
-            path="/signup"
-            element={
-              !isLoggedIn ? (
-                <LoginPage onLogin={handleLogin} isSignUp={true} />
-              ) : (
-                <Navigate to="/" replace />
-              )
-            }
-          />
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                {currentView === "instructions" && selectedTestId && (
-                  <Instructions onProceed={handleStartTestFromInstructions} />
-                )}
-                {currentView === "test" && selectedTestId && (
-                  <TestInterface
-                    currentSection={currentSection}
-                    onSectionChange={setCurrentSection}
-                    onTestComplete={handleTestComplete}
-                  />
-                )}
-                {currentView === "analysis" && selectedResult && (
-                  <TestAnalysis
-                    result={selectedResult}
-                    onBackToDashboard={handleBackToDashboard}
-                  />
-                )}
-                {currentView === "dashboard" && (
-                  <Dashboard
-                    lastTestResult={selectedResult}
-                    testHistory={testHistory}
-                    onStartTest={handleStartTest}
-                    onViewTestDetails={handleViewTestDetails}
-                    onLogout={handleLogout}
-                  />
-                )}
-              </ProtectedRoute>
-            }
-          />
-        </Routes>
-      </div>
-    </Router>
+    <>
+      <Toaster position="top-center" />
+      <Router>
+        <div className="min-h-screen bg-gray-50">
+          {isLoggedIn && (
+            <Header
+              language={language}
+              onLanguageChange={setLanguage}
+              userName={user?.fullName}
+              onLogout={handleLogout}
+            />
+          )}
+          <Routes>
+            <Route
+              path="/login"
+              element={
+                !isLoggedIn ? (
+                  <LoginPage onLogin={handleLogin} isSignUp={false} />
+                ) : (
+                  <Navigate to="/" replace />
+                )
+              }
+            />
+            <Route
+              path="/signup"
+              element={
+                !isLoggedIn ? (
+                  <LoginPage onLogin={handleLogin} isSignUp={true} />
+                ) : (
+                  <Navigate to="/" replace />
+                )
+              }
+            />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  {currentView === "instructions" && selectedTestId && (
+                    <Instructions onProceed={handleStartTestFromInstructions} />
+                  )}
+                  {currentView === "test" && selectedTestId && (
+                    <TestInterface
+                      currentSection={currentSection}
+                      onSectionChange={setCurrentSection}
+                      onTestComplete={handleTestComplete}
+                    />
+                  )}
+                  {currentView === "analysis" && selectedResult && (
+                    <TestAnalysis
+                      result={selectedResult}
+                      onBackToDashboard={handleBackToDashboard}
+                    />
+                  )}
+                  {currentView === "dashboard" && (
+                    <Dashboard
+                      lastTestResult={selectedResult}
+                      testHistory={testHistory}
+                      onStartTest={handleStartTest}
+                      onViewTestDetails={handleViewTestDetails}
+                      onLogout={handleLogout}
+                      user={user!}
+                    />
+                  )}
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </div>
+      </Router>
+    </>
   );
 }
 
