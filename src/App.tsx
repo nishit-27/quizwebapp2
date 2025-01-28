@@ -1,4 +1,10 @@
 import React, { useState } from "react";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
 import TestInterface from "./components/TestInterface";
 import Dashboard from "./components/Dashboard";
 import TestAnalysis from "./components/TestAnalysis";
@@ -57,10 +63,11 @@ function App() {
       ...result,
       testDate: new Date(),
       testId: selectedTestId!,
-      testTitle: selectedTestId === 'test1' ? 'JEE Mock Test 1' : 'JEE Mock Test 2',
+      testTitle:
+        selectedTestId === "test1" ? "JEE Mock Test 1" : "JEE Mock Test 2",
     };
     setSelectedResult(newResult);
-    setTestHistory(prev => [...prev, newResult]);
+    setTestHistory((prev) => [...prev, newResult]);
     setCurrentView("analysis");
   };
 
@@ -75,50 +82,88 @@ function App() {
     setSelectedResult(null);
   };
 
-  // Render the login page if not logged in
-  if (!isLoggedIn) {
-    return <LoginPage onLogin={handleLogin} />;
-  }
+  const handleLogout = () => {
+    setIsLoggedIn(false);
+    setUser(null);
+    setTestHistory([]);
+    setCurrentView("dashboard");
+  };
 
-  // Render the main application
+  // Protected Route component
+  const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+    if (!isLoggedIn) {
+      return <Navigate to="/login" replace />;
+    }
+    return <>{children}</>;
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Header 
-        language={language} 
-        onLanguageChange={setLanguage}
-        userName={user?.name}
-        onLogout={() => {
-          setIsLoggedIn(false);
-          setUser(null);
-          setTestHistory([]);
-          setCurrentView("dashboard");
-        }}
-      />
-      {currentView === "instructions" && selectedTestId && (
-        <Instructions onProceed={handleStartTestFromInstructions} />
-      )}
-      {currentView === "test" && selectedTestId && (
-        <TestInterface
-          currentSection={currentSection}
-          onSectionChange={setCurrentSection}
-          onTestComplete={handleTestComplete}
-        />
-      )}
-      {currentView === "analysis" && selectedResult && (
-        <TestAnalysis
-          result={selectedResult}
-          onBackToDashboard={handleBackToDashboard}
-        />
-      )}
-      {currentView === "dashboard" && (
-        <Dashboard 
-          lastTestResult={selectedResult}
-          testHistory={testHistory}
-          onStartTest={handleStartTest}
-          onViewTestDetails={handleViewTestDetails}
-        />
-      )}
-    </div>
+    <Router>
+      <div className="min-h-screen bg-gray-50">
+        {isLoggedIn && (
+          <Header
+            language={language}
+            onLanguageChange={setLanguage}
+            userName={user?.name}
+            onLogout={handleLogout}
+          />
+        )}
+        <Routes>
+          <Route
+            path="/login"
+            element={
+              !isLoggedIn ? (
+                <LoginPage onLogin={handleLogin} isSignUp={false} />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
+          <Route
+            path="/signup"
+            element={
+              !isLoggedIn ? (
+                <LoginPage onLogin={handleLogin} isSignUp={true} />
+              ) : (
+                <Navigate to="/" replace />
+              )
+            }
+          />
+          <Route
+            path="/"
+            element={
+              <ProtectedRoute>
+                {currentView === "instructions" && selectedTestId && (
+                  <Instructions onProceed={handleStartTestFromInstructions} />
+                )}
+                {currentView === "test" && selectedTestId && (
+                  <TestInterface
+                    currentSection={currentSection}
+                    onSectionChange={setCurrentSection}
+                    onTestComplete={handleTestComplete}
+                  />
+                )}
+                {currentView === "analysis" && selectedResult && (
+                  <TestAnalysis
+                    result={selectedResult}
+                    onBackToDashboard={handleBackToDashboard}
+                  />
+                )}
+                {currentView === "dashboard" && (
+                  <Dashboard
+                    lastTestResult={selectedResult}
+                    testHistory={testHistory}
+                    onStartTest={handleStartTest}
+                    onViewTestDetails={handleViewTestDetails}
+                    onLogout={handleLogout}
+                  />
+                )}
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </div>
+    </Router>
   );
 }
 
