@@ -1,47 +1,51 @@
 import React from 'react';
-import { User } from 'lucide-react';
+import { Globe } from 'lucide-react';
 
 interface HeaderProps {
   language: string;
-  onLanguageChange: (lang: string) => void;
+  onLanguageChange: (language: string) => void;
+  userName?: string;
+  onLogout?: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ language, onLanguageChange }) => {
+const Header: React.FC<HeaderProps> = ({ language, onLanguageChange, userName, onLogout }) => {
   return (
-    <div className="bg-white border-b border-gray-200 px-4 py-2">
-      <div className="flex justify-between items-center max-w-7xl mx-auto">
-        <div className="flex items-center space-x-4">
-          <img 
-            src="https://cmsredesign.channeli.in/library/assets/images/IITR_Logo.svg" 
-            alt="IITR Logo"
-            className="h-12"
-          />
-          <div className="border-l border-gray-300 h-12"></div>
-          <img 
-            src="https://upload.wikimedia.org/wikipedia/commons/5/55/Emblem_of_India.svg"
-            alt="Government of India"
-            className="h-12"
-          />
-        </div>
-        
-        <div className="flex items-center space-x-4">
-          <select
-            value={language}
-            onChange={(e) => onLanguageChange(e.target.value)}
-            className="border border-gray-300 rounded px-3 py-1"
-          >
-            <option value="english">English</option>
-            <option value="hindi">हिंदी</option>
-          </select>
+    <header className="bg-white shadow-sm">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <div className="flex justify-between items-center">
+          <h1 className="text-xl font-semibold text-gray-900">Quiz Portal</h1>
           
-          <div className="flex items-center space-x-2 bg-gray-100 px-3 py-1 rounded">
-            <User className="w-5 h-5" />
-            <span className="text-sm font-medium">Candidate Name</span>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <Globe className="w-5 h-5 text-gray-500" />
+              <select
+                value={language}
+                onChange={(e) => onLanguageChange(e.target.value)}
+                className="bg-white border border-gray-300 rounded-md py-1 px-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="english">English</option>
+                <option value="hindi">Hindi</option>
+              </select>
+            </div>
+
+            {userName && (
+              <div className="flex items-center space-x-4">
+                <span className="text-sm text-gray-700">Welcome, {userName}</span>
+                {onLogout && (
+                  <button
+                    onClick={onLogout}
+                    className="text-sm text-red-600 hover:text-red-700"
+                  >
+                    Logout
+                  </button>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
-    </div>
+    </header>
   );
-}
+};
 
 export default Header;
