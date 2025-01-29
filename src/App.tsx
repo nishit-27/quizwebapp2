@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -8,10 +8,10 @@ import {
 import TestInterface from "./components/TestInterface";
 import Dashboard from "./components/Dashboard";
 import TestAnalysis from "./components/TestAnalysis";
-import Header from "./components/Header";
 import LoginPage from "./components/LoginPage";
 import Instructions from "./components/Instructions";
 import { Toaster } from "react-hot-toast";
+import { TestService } from "./services/test.service";
 
 interface TestResult {
   score: number;
@@ -40,14 +40,30 @@ function App() {
   const [user, setUser] = useState<User | null>(null);
   const [selectedTestId, setSelectedTestId] = useState<string | null>(null);
   const [currentSection, setCurrentSection] = useState("physics");
-  const [language, setLanguage] = useState("english");
   const [currentView, setCurrentView] = useState<View>("dashboard");
   const [selectedResult, setSelectedResult] = useState<TestResult | null>(null);
   const [testHistory, setTestHistory] = useState<TestResult[]>([]);
 
+  // Add useEffect to check localStorage on component mount
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    if (storedUser) {
+      const userData = JSON.parse(storedUser);
+      setUser(userData);
+      setIsLoggedIn(true);
+
+      // Fetch test history
+      TestService.getTestHistory(userData.id)
+        .then((history) => setTestHistory(history))
+        .catch((error) => console.error("Error fetching test history:", error));
+    }
+  }, []);
+
   const handleLogin = (userData: User) => {
     setUser(userData);
     setIsLoggedIn(true);
+    // Store user data in localStorage
+    localStorage.setItem("user", JSON.stringify(userData));
   };
 
   const handleStartTest = (testId: string) => {
@@ -59,17 +75,28 @@ function App() {
     setCurrentView("test");
   };
 
-  const handleTestComplete = (result: TestResult) => {
+  const handleTestComplete = async (result: TestResult) => {
     const newResult = {
       ...result,
       testDate: new Date(),
       testId: selectedTestId!,
       testTitle:
         selectedTestId === "test1" ? "JEE Mock Test 1" : "JEE Mock Test 2",
+      studentId: user!.id, // Add student ID
     };
-    setSelectedResult(newResult);
-    setTestHistory((prev) => [...prev, newResult]);
-    setCurrentView("analysis");
+
+    try {
+      // Save to database
+      await TestService.saveTestResult(newResult);
+
+      // Update local state
+      setSelectedResult(newResult);
+      setTestHistory((prev) => [...prev, newResult]);
+      setCurrentView("analysis");
+    } catch (error) {
+      console.error("Error saving test result:", error);
+      // Handle error (maybe show a toast notification)
+    }
   };
 
   const handleViewTestDetails = (result: TestResult) => {
@@ -88,13 +115,25 @@ function App() {
     setUser(null);
     setTestHistory([]);
     setCurrentView("dashboard");
+    // Remove user data from localStorage
+    localStorage.removeItem("user");
   };
 
   // Protected Route component
   const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-    if (!isLoggedIn) {
+    const storedUser = localStorage.getItem("user");
+
+    if (!storedUser) {
       return <Navigate to="/login" replace />;
     }
+
+    // Ensure user state is set
+    if (!user) {
+      const userData = JSON.parse(storedUser);
+      setUser(userData);
+      setIsLoggedIn(true);
+    }
+
     return <>{children}</>;
   };
 
@@ -103,14 +142,6 @@ function App() {
       <Toaster position="top-center" />
       <Router>
         <div className="min-h-screen bg-gray-50">
-          {isLoggedIn && (
-            <Header
-              language={language}
-              onLanguageChange={setLanguage}
-              userName={user?.fullName}
-              onLogout={handleLogout}
-            />
-          )}
           <Routes>
             <Route
               path="/login"
@@ -152,14 +183,14 @@ function App() {
                       onBackToDashboard={handleBackToDashboard}
                     />
                   )}
-                  {currentView === "dashboard" && (
+                  {currentView === "dashboard" && user && (
                     <Dashboard
                       lastTestResult={selectedResult}
                       testHistory={testHistory}
                       onStartTest={handleStartTest}
                       onViewTestDetails={handleViewTestDetails}
                       onLogout={handleLogout}
-                      user={user!}
+                      user={user}
                     />
                   )}
                 </ProtectedRoute>
