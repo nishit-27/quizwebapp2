@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Clock,
   BookOpen,
@@ -23,7 +23,6 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import MyTests from "./MyTests";
 import Analytics from "./Analytics";
-import { TestService } from "../services/test.service";
 
 interface Test {
   id: string;
@@ -67,7 +66,7 @@ interface DashboardProps {
   onViewTestDetails: (result: TestResult) => void;
   testHistory: TestResult[];
   onLogout: () => void;
-  user: User | null;
+  user: User;
 }
 
 const Dashboard: React.FC<DashboardProps> = ({
@@ -121,32 +120,6 @@ const Dashboard: React.FC<DashboardProps> = ({
   const [currentView, setCurrentView] = useState<
     "dashboard" | "tests" | "analytics"
   >("dashboard");
-
-  // Add a loading state
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Add analytics state
-  const [analytics, setAnalytics] = useState<any>(null);
-
-  useEffect(() => {
-    if (user) {
-      setIsLoading(false);
-      TestService.getAnalytics(user.id)
-        .then((data) => setAnalytics(data))
-        .catch((error) => console.error("Error fetching analytics:", error));
-    }
-  }, [user]);
-
-  if (isLoading || !user) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
-      </div>
-    );
-  }
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);

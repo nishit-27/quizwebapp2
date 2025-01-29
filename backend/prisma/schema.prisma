@@ -18,7 +18,6 @@ model Student {
   fullName  String
   email     String   @unique
   password  String
-  testResults TestResult[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -30,23 +29,4 @@ model Admin {
   password  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-}
-
-model TestResult {
-  id            String   @id @default(uuid())
-  student       Student  @relation(fields: [studentId], references: [id])
-  studentId     String
-  testId        String
-  testTitle     String
-  score         Int
-  attempted     Int
-  correct       Int
-  incorrect     Int
-  unattempted   Int
-  questionTimes Json
-  answers       Json?
-  correctAnswers Json?
-  testDate      DateTime @default(now())
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
 }

@@ -91,20 +91,4 @@ export class AuthService {
       throw new Error('An unexpected error occurred');
     }
   }
-
-  static isLoggedIn(): boolean {
-    return localStorage.getItem('user') !== null;
-  }
-
-  static getCurrentUser(): User | null {
-    const userStr = localStorage.getItem('user');
-    if (userStr) {
-      return JSON.parse(userStr);
-    }
-    return null;
-  }
-
-  static logout(): void {
-    localStorage.removeItem('user');
-  }
 } 
